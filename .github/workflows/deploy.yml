@@ -30,7 +30,7 @@ jobs:
 
       - run: npm ci
 
-      - run: npm run build -- --base-href=/binural/
+      - run: npm run build -- --base-href=/Binaural/
 
       - name: Add SPA 404 fallback
         run: cp dist/binaural/browser/index.html dist/binaural/browser/404.html
