@@ -1274,7 +1274,7 @@ input[type='range'] {
   }
 
   .top {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr auto;
     grid-template-rows: auto auto;
     row-gap: 14px;
 
@@ -1286,6 +1286,12 @@ input[type='range'] {
     .hint {
       grid-row: 1;
       grid-column: 2;
+      white-space: nowrap;
+      justify-self: end;
+
+      span {
+        white-space: nowrap;
+      }
     }
   }
 
