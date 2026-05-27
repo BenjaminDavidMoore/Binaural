@@ -45,10 +45,33 @@ export class BinauralAudioService {
   private gainL: GainNode | null = null;
   private gainR: GainNode | null = null;
   private masterGain: GainNode | null = null;
+  private channelMerger: ChannelMergerNode | null = null;
   private noiseSource: AudioBufferSourceNode | null = null;
   private noiseGain: GainNode | null = null;
   private musicEl: HTMLAudioElement | null = null;
   private musicNode: MediaElementAudioSourceNode | null = null;
+  private wakeLock: WakeLockSentinel | null = null;
+
+  constructor() {
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', this.handleVisibilityChange);
+    }
+  }
+
+  private handleVisibilityChange = () => {
+    if (typeof document === 'undefined') return;
+    if (document.visibilityState !== 'visible') return;
+    if (!this.isPlaying() || !this.ctx) return;
+    // iOS Safari often suspends the AudioContext when the PWA is backgrounded.
+    // Resume on return so playback continues without requiring another tap.
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {
+        /* user gesture may be required; play button will re-trigger */
+      });
+    }
+    // Wake locks are also released when the page is hidden — reacquire.
+    this.acquireWakeLock();
+  };
 
   setLeftFreq(hz: number) {
     const v = this.clampFreq(hz);
@@ -161,7 +184,11 @@ export class BinauralAudioService {
   async start() {
     if (this.isPlaying()) return;
     if (!this.ctx) {
-      this.ctx = new AudioContext();
+      // Some older Safari versions only expose webkitAudioContext.
+      const Ctor: typeof AudioContext =
+        (window as unknown as { AudioContext?: typeof AudioContext }).AudioContext ??
+        (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext!;
+      this.ctx = new Ctor();
     }
     const ctx = this.ctx;
     const now = ctx.currentTime;
@@ -170,10 +197,12 @@ export class BinauralAudioService {
     this.masterGain.gain.setValueAtTime(0, now);
     this.masterGain.connect(ctx.destination);
 
-    const pannerL = ctx.createStereoPanner();
-    pannerL.pan.value = -1;
-    const pannerR = ctx.createStereoPanner();
-    pannerR.pan.value = 1;
+    // Explicit channel routing: L oscillator → channel 0, R oscillator → channel 1.
+    // This is more deterministic than StereoPannerNode hard-panning across
+    // browsers, Bluetooth sinks, and older iOS — the merger guarantees each
+    // oscillator lands on exactly one output channel.
+    this.channelMerger = ctx.createChannelMerger(2);
+    this.channelMerger.connect(this.masterGain);
 
     this.gainL = ctx.createGain();
     this.gainR = ctx.createGain();
@@ -187,8 +216,10 @@ export class BinauralAudioService {
     this.oscL.frequency.value = this.leftFreq();
     this.oscR.frequency.value = this.rightFreq();
 
-    this.oscL.connect(this.gainL).connect(pannerL).connect(this.masterGain);
-    this.oscR.connect(this.gainR).connect(pannerR).connect(this.masterGain);
+    this.oscL.connect(this.gainL);
+    this.gainL.connect(this.channelMerger, 0, 0);
+    this.oscR.connect(this.gainR);
+    this.gainR.connect(this.channelMerger, 0, 1);
 
     this.oscL.start();
     this.oscR.start();
@@ -205,6 +236,7 @@ export class BinauralAudioService {
     }
 
     this.isPlaying.set(true);
+    this.acquireWakeLock();
   }
 
   async stop() {
@@ -230,12 +262,42 @@ export class BinauralAudioService {
     await new Promise((r) => setTimeout(r, 360));
     this.teardownMusic();
     this.teardownNoise();
+    if (this.channelMerger) {
+      this.channelMerger.disconnect();
+      this.channelMerger = null;
+    }
     this.oscL = null;
     this.oscR = null;
     this.gainL = null;
     this.gainR = null;
     this.masterGain = null;
     this.isPlaying.set(false);
+    this.releaseWakeLock();
+  }
+
+  private async acquireWakeLock() {
+    if (typeof navigator === 'undefined' || !('wakeLock' in navigator)) return;
+    if (this.wakeLock) return;
+    try {
+      const sentinel = await (
+        navigator as Navigator & {
+          wakeLock: { request: (type: 'screen') => Promise<WakeLockSentinel> };
+        }
+      ).wakeLock.request('screen');
+      this.wakeLock = sentinel;
+      sentinel.addEventListener('release', () => {
+        this.wakeLock = null;
+      });
+    } catch {
+      /* permission denied or unsupported — fail silently */
+    }
+  }
+
+  private releaseWakeLock() {
+    this.wakeLock?.release().catch(() => {
+      /* already released */
+    });
+    this.wakeLock = null;
   }
 
   async toggle() {

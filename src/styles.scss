@@ -22,6 +22,14 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  // Respect iOS notches and home indicator when launched standalone.
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+    env(safe-area-inset-bottom) env(safe-area-inset-left);
+  // Disable double-tap zoom on controls; keep pinch-zoom natural.
+  touch-action: manipulation;
+  // Prevent the long-press selection callout on iOS for the immersive feel.
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
 }
 
 ::selection {
