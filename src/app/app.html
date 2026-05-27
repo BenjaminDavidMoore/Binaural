@@ -1,0 +1,305 @@
+<app-visualizer />
+
+<main class="shell">
+  <header class="top">
+    <div class="brand">
+      <span class="mark"></span>
+      <h1>BINAURAL</h1>
+    </div>
+    <div class="hint">
+      <span class="dot"></span>
+      <span>headphones required</span>
+    </div>
+  </header>
+
+  <section class="transport-bar">
+    <div class="vol">
+      <span class="slider-label">volume</span>
+      <input
+        type="range"
+        min="0"
+        max="1"
+        step="0.01"
+        [value]="audio.masterVolume()"
+        (input)="onVolumeInput($event)"
+      />
+      <span class="slider-val">{{ audio.masterVolume() * 100 | number: '1.0-0' }}%</span>
+    </div>
+    <button
+      class="play"
+      [class.playing]="audio.isPlaying()"
+      (click)="audio.toggle()"
+    >
+      @if (audio.isPlaying()) {
+        <span class="play-glyph">■</span>
+        <span>stop</span>
+      } @else {
+        <span class="play-glyph">▶</span>
+        <span>play</span>
+      }
+    </button>
+  </section>
+
+  <div class="workspace">
+  <div class="col controls-col">
+  <section class="hero">
+    <div class="band-tag">
+      <span class="band-name">{{ band().name }}</span>
+      <span class="band-range">{{ band().range }}</span>
+    </div>
+
+    <div class="ears">
+      <div class="ear">
+        <div class="ear-label">LEFT</div>
+        <div class="freq-display">
+          <span class="freq-val">{{ audio.leftFreq() | number: '1.0-1' }}</span>
+          <span class="freq-unit">Hz</span>
+        </div>
+        <div class="freq-controls">
+          <button class="nudge" (click)="audio.nudgeLeft(-1)" aria-label="decrease left 1 Hz">−</button>
+          <input
+            type="number"
+            step="0.1"
+            min="20"
+            max="2000"
+            [value]="audio.leftFreq()"
+            (change)="onLeftInput($event)"
+          />
+          <button class="nudge" (click)="audio.nudgeLeft(1)" aria-label="increase left 1 Hz">+</button>
+        </div>
+      </div>
+
+      <div class="sync-col">
+        <div class="ear-label">BINAURAL BEAT</div>
+        <div class="freq-display beat-display">
+          <span class="freq-val">{{ audio.beat() | number: '1.0-1' }}</span>
+          <span class="freq-unit">Hz</span>
+        </div>
+        <div class="sync-controls">
+          <button
+            type="button"
+            class="nudge"
+            (click)="audio.smartNudge(-1)"
+            [attr.aria-label]="audio.isSynced() ? 'decrease both channels by 1 Hz' : 'decrease beat by 1 Hz'"
+          >−</button>
+          <button
+            type="button"
+            class="sync-toggle"
+            [class.active]="audio.isSynced()"
+            [attr.aria-pressed]="audio.isSynced()"
+            [title]="audio.isSynced() ? 'L and R locked together — buttons nudge both channels' : 'click to match L and R — buttons nudge the beat'"
+            (click)="audio.sync()"
+          >
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 7H6a4 4 0 0 0 0 8h3" />
+              <path d="M15 17h3a4 4 0 0 0 0-8h-3" />
+              <line x1="8" y1="12" x2="16" y2="12" />
+            </svg>
+            <span>sync</span>
+          </button>
+          <button
+            type="button"
+            class="nudge"
+            (click)="audio.smartNudge(1)"
+            [attr.aria-label]="audio.isSynced() ? 'increase both channels by 1 Hz' : 'increase beat by 1 Hz'"
+          >+</button>
+        </div>
+      </div>
+
+      <div class="ear">
+        <div class="ear-label">RIGHT</div>
+        <div class="freq-display">
+          <span class="freq-val">{{ audio.rightFreq() | number: '1.0-1' }}</span>
+          <span class="freq-unit">Hz</span>
+        </div>
+        <div class="freq-controls">
+          <button class="nudge" (click)="audio.nudgeRight(-1)" aria-label="decrease right 1 Hz">−</button>
+          <input
+            type="number"
+            step="0.1"
+            min="20"
+            max="2000"
+            [value]="audio.rightFreq()"
+            (change)="onRightInput($event)"
+          />
+          <button class="nudge" (click)="audio.nudgeRight(1)" aria-label="increase right 1 Hz">+</button>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <div class="card-title">Waveform</div>
+    </div>
+    <div class="seg">
+      @for (w of waveforms; track w) {
+        <button
+          class="seg-btn"
+          [class.active]="audio.waveform() === w"
+          (click)="audio.setWaveform(w)"
+        >{{ w }}</button>
+      }
+    </div>
+
+    @if (audio.waveform() === 'custom') {
+      <div class="harmonics">
+        <div class="harmonics-label">Harmonics</div>
+        <div class="harmonic-row">
+          @for (i of harmonicIndexes(); track i) {
+            <div class="harmonic">
+              <input
+                type="range"
+                orient="vertical"
+                min="0"
+                max="1"
+                step="0.01"
+                [value]="audio.customHarmonics()[i]"
+                (input)="onHarmonicInput($event, i)"
+              />
+              <span class="harmonic-num">{{ i + 1 }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <div class="card-title">Ambient layer</div>
+    </div>
+    <div class="seg">
+      @for (m of modes; track m) {
+        <button
+          class="seg-btn"
+          [class.active]="audio.mode() === m"
+          (click)="audio.setMode(m)"
+        >{{ modeLabels[m] }}</button>
+      }
+    </div>
+
+    @if (audio.mode() === 'noise') {
+      <div class="sub-section">
+        <div class="sub-label">noise color</div>
+        <div class="seg">
+          @for (c of noiseColors; track c) {
+            <button
+              class="seg-btn"
+              [class.active]="audio.noiseColor() === c"
+              (click)="audio.setNoiseColor(c)"
+            >{{ c }}</button>
+          }
+        </div>
+      </div>
+    }
+
+    @if (audio.mode() === 'music') {
+      <div class="sub-section">
+        <div class="sub-label">album</div>
+        <div class="album-grid">
+          @for (a of albums; track a.id) {
+            <button
+              class="album-card"
+              [class.active]="audio.album()?.id === a.id"
+              (click)="selectAlbum(a)"
+            >
+              <div class="album-title">{{ a.title }}</div>
+              <div class="album-artist">{{ a.artist }}</div>
+              <div class="album-desc">{{ a.description }}</div>
+              <div class="album-meta">
+                <span>{{ a.tracks.length }} tracks</span>
+                <span class="album-lic">{{ a.license }}</span>
+              </div>
+            </button>
+          }
+        </div>
+
+        @if (audio.album(); as al) {
+          <div class="now-playing">
+            <div class="np-info">
+              <div class="np-label">
+                now playing
+                @if (currentTrackPosition(); as pos) {
+                  <span class="np-pos">{{ pos }}</span>
+                }
+              </div>
+              @if (audio.currentTrack(); as t) {
+                <div class="np-title">{{ t.title }}</div>
+              }
+              <div class="np-album">{{ al.title }} — {{ al.artist }}</div>
+            </div>
+            <div class="np-controls">
+              <button class="np-btn" (click)="audio.skipPrev()" [disabled]="!audio.isPlaying()" aria-label="previous track">‹</button>
+              <button class="np-btn" (click)="audio.skipNext()" [disabled]="!audio.isPlaying()" aria-label="next track">›</button>
+              <a class="np-cite" [href]="al.source" target="_blank" rel="noopener noreferrer">
+                source ↗
+              </a>
+            </div>
+            @if (audio.trackLoading()) {
+              <div class="np-status">loading…</div>
+            }
+            @if (audio.trackError(); as err) {
+              <div class="np-status error">{{ err }}</div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    @if (audio.mode() !== 'off') {
+      <div class="slider-row ambient-vol">
+        <span class="slider-label">volume</span>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          [value]="audio.ambientVolume()"
+          (input)="onAmbientVolumeInput($event)"
+        />
+        <span class="slider-val">{{ audio.ambientVolume() * 100 | number: '1.0-0' }}%</span>
+      </div>
+    }
+  </section>
+
+  </div>
+
+  <aside class="col presets-col">
+    <section class="card presets">
+      <div class="card-head">
+        <div class="card-title">Research-backed presets</div>
+        <div class="card-sub">click any to load</div>
+      </div>
+      <div class="preset-grid">
+        @for (p of presets; track p.id) {
+          <button class="preset" (click)="applyPreset(p)">
+            <div class="preset-top">
+              <span class="preset-band">{{ p.band }}</span>
+              <span class="preset-evidence" [attr.data-level]="p.evidence">{{ p.evidence }}</span>
+            </div>
+            <div class="preset-name">{{ p.name }}</div>
+            <div class="preset-effect">{{ p.effect }}</div>
+            <div class="preset-freqs">
+              <span>{{ p.carrier }} Hz</span>
+              <span class="sep">·</span>
+              <span>{{ p.beat }} Hz beat</span>
+            </div>
+            <div class="preset-note">{{ p.note }}</div>
+            <div class="preset-cite">{{ p.citation }}</div>
+          </button>
+        }
+      </div>
+    </section>
+  </aside>
+  </div>
+
+  <footer class="foot">
+    <p>
+      Binaural beats are an auditory illusion. Evidence is strongest for modest
+      anxiety reduction in the alpha band; other effects vary by individual.
+      Not a medical device.
+    </p>
+  </footer>
+</main>
