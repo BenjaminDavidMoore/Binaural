@@ -138,43 +138,6 @@
 
   <section class="card">
     <div class="card-head">
-      <div class="card-title">Waveform</div>
-    </div>
-    <div class="seg">
-      @for (w of waveforms; track w) {
-        <button
-          class="seg-btn"
-          [class.active]="audio.waveform() === w"
-          (click)="audio.setWaveform(w)"
-        >{{ w }}</button>
-      }
-    </div>
-
-    @if (audio.waveform() === 'custom') {
-      <div class="harmonics">
-        <div class="harmonics-label">Harmonics</div>
-        <div class="harmonic-row">
-          @for (i of harmonicIndexes(); track i) {
-            <div class="harmonic">
-              <input
-                type="range"
-                orient="vertical"
-                min="0"
-                max="1"
-                step="0.01"
-                [value]="audio.customHarmonics()[i]"
-                (input)="onHarmonicInput($event, i)"
-              />
-              <span class="harmonic-num">{{ i + 1 }}</span>
-            </div>
-          }
-        </div>
-      </div>
-    }
-  </section>
-
-  <section class="card">
-    <div class="card-head">
       <div class="card-title">Ambient layer</div>
     </div>
     <div class="seg">
@@ -267,6 +230,43 @@
           (input)="onAmbientVolumeInput($event)"
         />
         <span class="slider-val">{{ audio.ambientVolume() * 100 | number: '1.0-0' }}%</span>
+      </div>
+    }
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <div class="card-title">Waveform</div>
+    </div>
+    <div class="seg">
+      @for (w of waveforms; track w) {
+        <button
+          class="seg-btn"
+          [class.active]="audio.waveform() === w"
+          (click)="audio.setWaveform(w)"
+        >{{ w }}</button>
+      }
+    </div>
+
+    @if (audio.waveform() === 'custom') {
+      <div class="harmonics">
+        <div class="harmonics-label">Harmonics</div>
+        <div class="harmonic-row">
+          @for (i of harmonicIndexes(); track i) {
+            <div class="harmonic">
+              <input
+                type="range"
+                orient="vertical"
+                min="0"
+                max="1"
+                step="0.01"
+                [value]="audio.customHarmonics()[i]"
+                (input)="onHarmonicInput($event, i)"
+              />
+              <span class="harmonic-num">{{ i + 1 }}</span>
+            </div>
+          }
+        </div>
       </div>
     }
   </section>
