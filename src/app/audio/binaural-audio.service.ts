@@ -163,9 +163,6 @@ export class BinauralAudioService {
     if (!this.ctx) {
       this.ctx = new AudioContext();
     }
-    if (this.ctx.state === 'suspended') {
-      await this.ctx.resume();
-    }
     const ctx = this.ctx;
     const now = ctx.currentTime;
 
@@ -196,9 +193,16 @@ export class BinauralAudioService {
     this.oscL.start();
     this.oscR.start();
 
+    // Build ambient layer (incl. music el.play()) synchronously, before awaiting
+    // ctx.resume(). On iOS Safari, awaiting resume breaks the user-gesture chain,
+    // and any subsequent HTMLAudioElement.play() call gets blocked.
     this.refreshAmbient();
 
     this.masterGain.gain.linearRampToValueAtTime(this.masterVolume(), now + 0.4);
+
+    if (ctx.state === 'suspended') {
+      await ctx.resume();
+    }
 
     this.isPlaying.set(true);
   }
@@ -323,16 +327,17 @@ export class BinauralAudioService {
 
     const track = album.tracks[this.trackIndex() % album.tracks.length];
     el.src = track.url;
-
-    const node = this.ctx.createMediaElementSource(el);
-    node.connect(this.noiseGain);
-
     this.musicEl = el;
-    this.musicNode = node;
 
+    // Call play() before wiring into Web Audio. iOS Safari can silently mute an
+    // element that's routed through createMediaElementSource before its first play.
     el.play().catch((err) => {
       this.trackError.set(err?.message ?? 'playback blocked');
     });
+
+    const node = this.ctx.createMediaElementSource(el);
+    node.connect(this.noiseGain);
+    this.musicNode = node;
   }
 
   private handleTrackEnded = () => {

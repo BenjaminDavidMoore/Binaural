@@ -46,7 +46,14 @@ export class App {
     return { name: 'Gamma', range: '30+ Hz' };
   });
 
-  protected waveforms: Waveform[] = ['sine', 'square', 'triangle', 'sawtooth', 'custom'];
+  protected waveforms: Waveform[] = ['sine', 'custom', 'square', 'triangle', 'sawtooth'];
+  protected waveformLabels: Record<Waveform, string> = {
+    sine: 'sine',
+    custom: 'custom',
+    square: 'square',
+    triangle: 'triangle',
+    sawtooth: 'sawtooth',
+  };
   protected modes: Mode[] = ['off', 'noise', 'music'];
   protected modeLabels: Record<Mode, string> = { off: 'none', noise: 'noise', music: 'music' };
   protected noiseColors: NoiseColor[] = ['white', 'pink', 'brown'];

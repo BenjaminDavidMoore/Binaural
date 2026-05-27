@@ -150,6 +150,21 @@
       }
     </div>
 
+    @if (audio.mode() !== 'off') {
+      <div class="slider-row ambient-vol">
+        <span class="slider-label">volume</span>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          [value]="audio.ambientVolume()"
+          (input)="onAmbientVolumeInput($event)"
+        />
+        <span class="slider-val">{{ audio.ambientVolume() * 100 | number: '1.0-0' }}%</span>
+      </div>
+    }
+
     @if (audio.mode() === 'noise') {
       <div class="sub-section">
         <div class="sub-label">noise color</div>
@@ -166,6 +181,36 @@
     }
 
     @if (audio.mode() === 'music') {
+      @if (audio.album(); as al) {
+        <div class="now-playing">
+          <div class="np-info">
+            <div class="np-label">
+              now playing
+              @if (currentTrackPosition(); as pos) {
+                <span class="np-pos">{{ pos }}</span>
+              }
+            </div>
+            @if (audio.currentTrack(); as t) {
+              <div class="np-title">{{ t.title }}</div>
+            }
+            <div class="np-album">{{ al.title }} — {{ al.artist }}</div>
+          </div>
+          <div class="np-controls">
+            <button class="np-btn" (click)="audio.skipPrev()" [disabled]="!audio.isPlaying()" aria-label="previous track">‹</button>
+            <button class="np-btn" (click)="audio.skipNext()" [disabled]="!audio.isPlaying()" aria-label="next track">›</button>
+            <a class="np-cite" [href]="al.source" target="_blank" rel="noopener noreferrer">
+              source ↗
+            </a>
+          </div>
+          @if (audio.trackLoading()) {
+            <div class="np-status">loading…</div>
+          }
+          @if (audio.trackError(); as err) {
+            <div class="np-status error">{{ err }}</div>
+          }
+        </div>
+      }
+
       <div class="sub-section">
         <div class="sub-label">album</div>
         <div class="album-grid">
@@ -185,51 +230,6 @@
             </button>
           }
         </div>
-
-        @if (audio.album(); as al) {
-          <div class="now-playing">
-            <div class="np-info">
-              <div class="np-label">
-                now playing
-                @if (currentTrackPosition(); as pos) {
-                  <span class="np-pos">{{ pos }}</span>
-                }
-              </div>
-              @if (audio.currentTrack(); as t) {
-                <div class="np-title">{{ t.title }}</div>
-              }
-              <div class="np-album">{{ al.title }} — {{ al.artist }}</div>
-            </div>
-            <div class="np-controls">
-              <button class="np-btn" (click)="audio.skipPrev()" [disabled]="!audio.isPlaying()" aria-label="previous track">‹</button>
-              <button class="np-btn" (click)="audio.skipNext()" [disabled]="!audio.isPlaying()" aria-label="next track">›</button>
-              <a class="np-cite" [href]="al.source" target="_blank" rel="noopener noreferrer">
-                source ↗
-              </a>
-            </div>
-            @if (audio.trackLoading()) {
-              <div class="np-status">loading…</div>
-            }
-            @if (audio.trackError(); as err) {
-              <div class="np-status error">{{ err }}</div>
-            }
-          </div>
-        }
-      </div>
-    }
-
-    @if (audio.mode() !== 'off') {
-      <div class="slider-row ambient-vol">
-        <span class="slider-label">volume</span>
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.01"
-          [value]="audio.ambientVolume()"
-          (input)="onAmbientVolumeInput($event)"
-        />
-        <span class="slider-val">{{ audio.ambientVolume() * 100 | number: '1.0-0' }}%</span>
       </div>
     }
   </section>
@@ -238,13 +238,13 @@
     <div class="card-head">
       <div class="card-title">Waveform</div>
     </div>
-    <div class="seg">
+    <div class="seg seg-scroll">
       @for (w of waveforms; track w) {
         <button
           class="seg-btn"
           [class.active]="audio.waveform() === w"
           (click)="audio.setWaveform(w)"
-        >{{ w }}</button>
+        >{{ waveformLabels[w] }}</button>
       }
     </div>
 
