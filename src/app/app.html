@@ -20,34 +20,6 @@
     </div>
   </header>
 
-  <section class="transport-bar">
-    <div class="vol">
-      <span class="slider-label">volume</span>
-      <input
-        type="range"
-        min="0"
-        max="1"
-        step="0.01"
-        [value]="audio.masterVolume()"
-        (input)="onVolumeInput($event)"
-      />
-      <span class="slider-val">{{ audio.masterVolume() * 100 | number: '1.0-0' }}%</span>
-    </div>
-    <button
-      class="play"
-      [class.playing]="audio.isPlaying()"
-      (click)="audio.toggle()"
-    >
-      @if (audio.isPlaying()) {
-        <span class="play-glyph">■</span>
-        <span>stop</span>
-      } @else {
-        <span class="play-glyph">▶</span>
-        <span>play</span>
-      }
-    </button>
-  </section>
-
   <div class="workspace">
   <section class="hero">
     <div class="band-tag">
@@ -134,6 +106,34 @@
       </div>
     </div>
 
+    <div class="layer-controls">
+      <div class="slider-row">
+        <span class="slider-label">volume</span>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          [value]="audio.masterVolume()"
+          (input)="onVolumeInput($event)"
+        />
+        <span class="slider-val">{{ audio.masterVolume() * 100 | number: '1.0-0' }}%</span>
+      </div>
+      <button
+        class="play"
+        [class.playing]="audio.isPlaying()"
+        (click)="audio.toggle()"
+      >
+        @if (audio.isPlaying()) {
+          <span class="play-glyph">■</span>
+          <span>stop</span>
+        } @else {
+          <span class="play-glyph">▶</span>
+          <span>play</span>
+        }
+      </button>
+    </div>
+
   </section>
 
   <section class="card">
@@ -151,17 +151,32 @@
     </div>
 
     @if (audio.mode() !== 'off') {
-      <div class="slider-row ambient-vol">
-        <span class="slider-label">volume</span>
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.01"
-          [value]="audio.ambientVolume()"
-          (input)="onAmbientVolumeInput($event)"
-        />
-        <span class="slider-val">{{ audio.ambientVolume() * 100 | number: '1.0-0' }}%</span>
+      <div class="layer-controls">
+        <div class="slider-row ambient-vol">
+          <span class="slider-label">volume</span>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            [value]="audio.ambientVolume()"
+            (input)="onAmbientVolumeInput($event)"
+          />
+          <span class="slider-val">{{ audio.ambientVolume() * 100 | number: '1.0-0' }}%</span>
+        </div>
+        <button
+          class="play"
+          [class.playing]="audio.isAmbientPlaying()"
+          (click)="audio.toggleAmbient()"
+        >
+          @if (audio.isAmbientPlaying()) {
+            <span class="play-glyph">■</span>
+            <span>stop</span>
+          } @else {
+            <span class="play-glyph">▶</span>
+            <span>play</span>
+          }
+        </button>
       </div>
     }
 
@@ -196,8 +211,8 @@
             <div class="np-album">{{ al.title }} — {{ al.artist }}</div>
           </div>
           <div class="np-controls">
-            <button class="np-btn" (click)="audio.skipPrev()" [disabled]="!audio.isPlaying()" aria-label="previous track">‹</button>
-            <button class="np-btn" (click)="audio.skipNext()" [disabled]="!audio.isPlaying()" aria-label="next track">›</button>
+            <button class="np-btn" (click)="audio.skipPrev()" [disabled]="!audio.isAmbientPlaying()" aria-label="previous track">‹</button>
+            <button class="np-btn" (click)="audio.skipNext()" [disabled]="!audio.isAmbientPlaying()" aria-label="next track">›</button>
             <a class="np-cite" [href]="al.source" target="_blank" rel="noopener noreferrer">
               source ↗
             </a>
