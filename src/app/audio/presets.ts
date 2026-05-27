@@ -11,6 +11,7 @@ export interface Preset {
   evidence: 'strong' | 'moderate' | 'preliminary';
   citation: string;
   note: string;
+  paperUrl: string;
 }
 
 // Notes on evidence: a 2019 meta-analysis (Garcia-Argibay, Santed, Reales) found
@@ -33,6 +34,7 @@ export const PRESETS: Preset[] = [
     citation:
       'Padmanabhan et al. 2005; Le Scouarnec et al. 2001; Garcia-Argibay et al. 2019 (meta-analysis)',
     note: 'Most consistently replicated effect. 10 Hz alpha-band beats reduced pre-operative and trait anxiety in RCTs.',
+    paperUrl: 'https://link.springer.com/article/10.1007/s00426-018-1066-8',
   },
   {
     id: 'meditate',
@@ -45,6 +47,7 @@ export const PRESETS: Preset[] = [
     evidence: 'moderate',
     citation: 'Lane et al. 1998; Reedijk et al. 2013',
     note: 'Theta beats (4–8 Hz) associated with mood shifts and meditative states. Effect sizes moderate, individual response varies.',
+    paperUrl: 'https://pubmed.ncbi.nlm.nih.gov/9423966/',
   },
   {
     id: 'sleep',
@@ -57,6 +60,7 @@ export const PRESETS: Preset[] = [
     evidence: 'moderate',
     citation: 'Jirakittayakorn & Wongsawat 2018; Abeln et al. 2014',
     note: '3 Hz delta beats showed subjective sleep-quality improvements and some EEG delta-power increases.',
+    paperUrl: 'https://www.frontiersin.org/articles/10.3389/fnhum.2018.00387/full',
   },
   {
     id: 'focus',
@@ -69,6 +73,7 @@ export const PRESETS: Preset[] = [
     evidence: 'moderate',
     citation: 'Lane et al. 1998; Kennerly 1994',
     note: 'Beta-range beats correlated with improved vigilance on attention tasks; some null results in newer studies.',
+    paperUrl: 'https://pubmed.ncbi.nlm.nih.gov/9423966/',
   },
   {
     id: 'cognition',
@@ -79,7 +84,8 @@ export const PRESETS: Preset[] = [
     beat: 40,
     waveform: 'sine',
     evidence: 'preliminary',
-    citation: 'Beauchene et al. 2017; Iaccarino et al. 2016 (animal model)',
+    citation: 'Beauchene et al. 2016 (15 Hz, PLOS One); Iaccarino et al. 2016 (40 Hz, animal model)',
     note: 'Suggestive evidence only. 40 Hz gamma may modulate working memory in humans; strongest data is from non-binaural 40 Hz stimulation.',
+    paperUrl: 'https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0166630',
   },
 ];

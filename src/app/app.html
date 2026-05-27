@@ -6,6 +6,14 @@
       <span class="mark"></span>
       <h1>BINAURAL</h1>
     </div>
+    <button class="explain-btn" type="button" (click)="openModal()">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 8v.01" />
+        <path d="M11 12h1v4h1" />
+      </svg>
+      <span>What Are Binaural Beats?</span>
+    </button>
     <div class="hint">
       <span class="dot"></span>
       <span>headphones required</span>
@@ -41,7 +49,6 @@
   </section>
 
   <div class="workspace">
-  <div class="col controls-col">
   <section class="hero">
     <div class="band-tag">
       <span class="band-name">{{ band().name }}</span>
@@ -266,35 +273,6 @@
 
   </div>
 
-  <aside class="col presets-col">
-    <section class="card presets">
-      <div class="card-head">
-        <div class="card-title">Research-backed presets</div>
-        <div class="card-sub">click any to load</div>
-      </div>
-      <div class="preset-grid">
-        @for (p of presets; track p.id) {
-          <button class="preset" (click)="applyPreset(p)">
-            <div class="preset-top">
-              <span class="preset-band">{{ p.band }}</span>
-              <span class="preset-evidence" [attr.data-level]="p.evidence">{{ p.evidence }}</span>
-            </div>
-            <div class="preset-name">{{ p.name }}</div>
-            <div class="preset-effect">{{ p.effect }}</div>
-            <div class="preset-freqs">
-              <span>{{ p.carrier }} Hz</span>
-              <span class="sep">·</span>
-              <span>{{ p.beat }} Hz beat</span>
-            </div>
-            <div class="preset-note">{{ p.note }}</div>
-            <div class="preset-cite">{{ p.citation }}</div>
-          </button>
-        }
-      </div>
-    </section>
-  </aside>
-  </div>
-
   <footer class="foot">
     <p>
       Binaural beats are an auditory illusion. Evidence is strongest for modest
@@ -303,3 +281,133 @@
     </p>
   </footer>
 </main>
+
+<aside class="sidebar" [class.open]="sidebarOpen()" [class.tab-faqs]="activeTab() === 'faqs'">
+  <nav class="rail">
+    <button
+      class="rail-tab"
+      [class.active]="sidebarOpen() && activeTab() === 'presets'"
+      (click)="selectTab('presets')"
+      [attr.aria-expanded]="sidebarOpen() && activeTab() === 'presets'"
+    >
+      <span class="rail-label">Research-Backed Presets</span>
+    </button>
+    <button
+      class="rail-tab"
+      [class.active]="sidebarOpen() && activeTab() === 'faqs'"
+      (click)="selectTab('faqs')"
+      [attr.aria-expanded]="sidebarOpen() && activeTab() === 'faqs'"
+    >
+      <span class="rail-label">FAQs</span>
+    </button>
+  </nav>
+
+  <section class="panel">
+    <header class="panel-head">
+      <h2>
+        @if (activeTab() === 'presets') { Research-Backed Presets }
+        @else if (activeTab() === 'faqs') { Frequently Asked Questions }
+      </h2>
+      <button class="panel-close" (click)="closeSidebar()" aria-label="close panel">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="6" y1="6" x2="18" y2="18" />
+          <line x1="6" y1="18" x2="18" y2="6" />
+        </svg>
+      </button>
+    </header>
+
+    <div class="panel-body">
+      @if (activeTab() === 'presets') {
+        <div class="preset-grid">
+          @for (p of presets; track p.id) {
+            <div
+              class="preset"
+              role="button"
+              tabindex="0"
+              (click)="applyPreset(p)"
+              (keydown.enter)="applyPreset(p)"
+              (keydown.space)="$event.preventDefault(); applyPreset(p)"
+            >
+              <div class="preset-top">
+                <span class="preset-band">{{ p.band }}</span>
+                <span class="preset-evidence" [attr.data-level]="p.evidence">{{ p.evidence }}</span>
+              </div>
+              <div class="preset-name">{{ p.name }}</div>
+              <div class="preset-effect">{{ p.effect }}</div>
+              <div class="preset-freqs">
+                <span>{{ p.carrier }} Hz</span>
+                <span class="sep">·</span>
+                <span>{{ p.beat }} Hz beat</span>
+              </div>
+              <div class="preset-note">{{ p.note }}</div>
+              <div class="preset-foot">
+                <div class="preset-cite">{{ p.citation }}</div>
+                <a
+                  class="preset-link"
+                  [href]="p.paperUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  (click)="$event.stopPropagation()"
+                  (keydown)="$event.stopPropagation()"
+                  [attr.aria-label]="'open research paper for ' + p.name"
+                  title="open research paper"
+                >
+                  <span>paper</span>
+                  <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M7 17 17 7" />
+                    <path d="M8 7h9v9" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      @if (activeTab() === 'faqs') {
+        <ul class="faq-list">
+          @for (faq of faqs; track $index) {
+            <li class="faq-item" [class.open]="expandedFaq() === $index">
+              <button class="faq-q" (click)="toggleFaq($index)" [attr.aria-expanded]="expandedFaq() === $index">
+                <span class="faq-q-text">{{ faq.q }}</span>
+                <svg class="faq-chev" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+              @if (expandedFaq() === $index) {
+                <div class="faq-a" [innerHTML]="renderBody(faq.a)"></div>
+              }
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  </section>
+</aside>
+
+@if (sidebarOpen()) {
+  <div class="sidebar-backdrop" (click)="closeSidebar()" aria-hidden="true"></div>
+}
+
+@if (modalOpen()) {
+  <div class="modal-backdrop" (click)="closeModal()" aria-hidden="true"></div>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <header class="modal-head">
+      <h2 id="modal-title">What Are Binaural Beats?</h2>
+      <button class="modal-close" (click)="closeModal()" aria-label="close">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="6" y1="6" x2="18" y2="18" />
+          <line x1="6" y1="18" x2="18" y2="6" />
+        </svg>
+      </button>
+    </header>
+    <div class="modal-body">
+      @for (section of whatIs; track section.heading) {
+        <section class="explain-section">
+          <h3>{{ section.heading }}</h3>
+          <p [innerHTML]="renderBody(section.body)"></p>
+        </section>
+      }
+    </div>
+  </div>
+}
